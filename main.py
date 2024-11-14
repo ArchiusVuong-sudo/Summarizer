@@ -26,7 +26,7 @@ async def get_summary(llm: AzureChatOpenAI, docs: list[Document]) -> dict[str, a
         pass
 
     return step
-``
+
 def extract_document(llm: AzureChatOpenAI, file_path: str):
     document_loader: DocumentLoader = DocumentLoader()
     docs: list[Document] = document_loader.load(file_path)
