@@ -26,7 +26,7 @@ async def get_summary(llm: AzureChatOpenAI, docs: list[Document]) -> dict[str, a
         pass
 
     return step
-
+``
 def extract_document(llm: AzureChatOpenAI, file_path: str):
     document_loader: DocumentLoader = DocumentLoader()
     docs: list[Document] = document_loader.load(file_path)
@@ -73,7 +73,7 @@ def extract_document(llm: AzureChatOpenAI, file_path: str):
     summary = asyncio.run(get_summary(llm, docs))
     metadata = runnable.invoke({"text": summary})
 
-    return  metadata.title, metadata.keywords, summary['generate_final_summary']['final_summary']
+    return  metadata.subject, metadata.keywords, summary['generate_final_summary']['final_summary']
 
 
 if __name__ == '__main__':
@@ -84,18 +84,18 @@ if __name__ == '__main__':
         api_version = "2024-08-01-preview"
     )
 
-    df = pd.DataFrame(columns=['file_name', 'title', 'keywords', 'summary'])
+    df = pd.DataFrame(columns=['file_name', 'subject', 'keywords', 'summary'])
 
     for file_name in os.listdir(os.environ['DOCUMENT_PATH']):
         file_path = os.path.join(os.environ['DOCUMENT_PATH'], file_name)
         if os.path.isfile(file_path):
-            title, keywords, summary = extract_document(llm, file_path)
+            subject, keywords, summary = extract_document(llm, file_path)
 
             df = pd.concat([df, pd.DataFrame([{
                 'file_name': file_name, 
-                'title': title,
+                'subject': subject,
                 'keywords': keywords,
                 'summary': summary
             }])], ignore_index=True)
 
-    df.to_excel("/app/output/output_file.xlsx")  
+    df.to_excel("output_file.xlsx")  
