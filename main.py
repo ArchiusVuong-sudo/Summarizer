@@ -7,9 +7,9 @@ from dotenv import load_dotenv
 from langchain_openai import AzureChatOpenAI
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.document_loaders import PyPDFLoader
 
 from core.metadata import Metadata
-from core.document_loader import DocumentLoader
 from core.document_summarizer import DocumentSummarizer
 
 
@@ -28,8 +28,8 @@ async def get_summary(llm: AzureChatOpenAI, docs: list[Document]) -> dict[str, a
     return step
 
 def extract_document(llm: AzureChatOpenAI, file_path: str):
-    document_loader: DocumentLoader = DocumentLoader()
-    docs: list[Document] = document_loader.load(file_path)
+    document_loader: PyPDFLoader = PyPDFLoader(file_path)
+    docs: list[Document] = document_loader.load()
 
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -49,32 +49,7 @@ def extract_document(llm: AzureChatOpenAI, file_path: str):
     summary = asyncio.run(get_summary(llm, docs))
     metadata = runnable.invoke({"text": summary})
 
-    return  metadata.title, metadata.keywords, summary['generate_final_summary']['final_summary']
-
-def extract_document(llm: AzureChatOpenAI, file_path: str):
-    document_loader: DocumentLoader = DocumentLoader()
-    docs: list[Document] = document_loader.load(file_path)
-
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                "You are an expert extraction algorithm. "
-                "Only extract relevant information from the text. "
-                "If you do not know the value of an attribute asked to extract, "
-                "return null for the attribute's value.",
-            ),
-            ("human", "{text}"),
-        ]
-    )
-
-    runnable = prompt | llm.with_structured_output(schema = Metadata)
-
-    summary = asyncio.run(get_summary(llm, docs))
-    metadata = runnable.invoke({"text": summary})
-
-    return  metadata.subject, metadata.keywords, summary['generate_final_summary']['final_summary']
-
+    return metadata.subject, metadata.keywords, summary['generate_final_summary']['final_summary']
 
 if __name__ == '__main__':
     load_dotenv()
