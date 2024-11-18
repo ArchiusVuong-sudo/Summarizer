@@ -64,13 +64,16 @@ if __name__ == '__main__':
     for file_name in os.listdir(os.environ['DOCUMENT_PATH']):
         file_path = os.path.join(os.environ['DOCUMENT_PATH'], file_name)
         if os.path.isfile(file_path):
-            subject, keywords, summary = extract_document(llm, file_path)
+            try:
+                subject, keywords, summary = extract_document(llm, file_path)
 
-            df = pd.concat([df, pd.DataFrame([{
-                'file_name': file_name, 
-                'subject': subject,
-                'keywords': keywords,
-                'summary': summary
-            }])], ignore_index=True)
+                df = pd.concat([df, pd.DataFrame([{
+                    'file_name': file_name, 
+                    'subject': subject,
+                    'keywords': keywords,
+                    'summary': summary
+                }])], ignore_index=True)
+            except:
+                print(f'- Cannot extract: {file_path}')
 
     df.to_excel("output_file.xlsx")  
