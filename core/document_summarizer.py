@@ -1,5 +1,4 @@
 import operator
-from langchain import hub
 from langchain_openai import AzureChatOpenAI
 from langchain_core.documents import Document
 from langchain_text_splitters import CharacterTextSplitter
@@ -7,6 +6,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain.chains.combine_documents.reduce import acollapse_docs, split_list_of_docs
 from langgraph.constants import Send
 from langgraph.graph import END, START, StateGraph
+from langchain_core.prompts import ChatPromptTemplate
 
 from typing import Annotated, List, Literal, TypedDict, Dict, Any
 
@@ -32,10 +32,12 @@ class DocumentSummarizer:
         self.split_docs = self.text_splitter.split_documents(docs)
         
         # Define map and reduce chains
-        self.map_prompt: str = hub.pull("rlm/map-prompt")
+        self.map_prompt: str = ChatPromptTemplate.from_messages(
+            [("system", "The following is a set of documents:\n{docs}\nBased on this list of docs, please identify the main themes \nHelpful Answer:")]
+        )
         self.map_chain = self.map_prompt | self.llm | StrOutputParser()
 
-        self.reduce_prompt: str = hub.pull("rlm/reduce-prompt")
+        self.reduce_prompt: str = ChatPromptTemplate([("human", 'The following is set of summaries:\n{doc_summaries}\nTake these and distill it into a final, consolidated summary of the main themes. \nHelpful Answer:')])
         self.reduce_chain = self.reduce_prompt | self.llm | StrOutputParser()
         
         self.graph = self._construct_graph()
